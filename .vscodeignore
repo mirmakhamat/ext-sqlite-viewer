@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+out/**
+node_modules/**
+!node_modules/sql.js/**
+src/**
+!src/webview/**
+.gitignore
+.yarnrc
+webpack.config.js
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/eslint.config.mjs
+**/*.map
+**/*.ts
+**/.vscode-test.*

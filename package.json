@@ -1,0 +1,89 @@
+{
+  "name": "sqlite-viewer-pro",
+  "displayName": "SQLite Viewer Pro",
+  "description": "Fast, modern SQLite Database Viewer & SQL Query Console for Visual Studio Code",
+  "version": "0.0.1",
+  "publisher": "mirmakhamat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mirmaxamat/ext-sqlite-viewer.git"
+  },
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#0d121d",
+    "theme": "dark"
+  },
+  "keywords": [
+    "sqlite",
+    "sqlite3",
+    "database",
+    "db",
+    "sql",
+    "viewer",
+    "editor",
+    "query",
+    "export",
+    "csv",
+    "json"
+  ],
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "Data Science",
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "sqliteViewer.option",
+        "displayName": "SQLite Viewer",
+        "selector": [
+          { "filenamePattern": "*.db" },
+          { "filenamePattern": "*.sqlite" },
+          { "filenamePattern": "*.sqlite3" },
+          { "filenamePattern": "*.db3" }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      { "command": "sqlite-viewer.openViewer", "title": "SQLite Viewer: Open Viewer" }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
+    "@types/sql.js": "^1.4.11",
+    "@types/vscode": "^1.125.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "eslint": "^10.5.0",
+    "ts-loader": "^9.6.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1",
+    "webpack": "^5.107.2",
+    "webpack-cli": "^7.0.3"
+  },
+  "overrides": {
+    "diff": "^8.0.4",
+    "serialize-javascript": "^7.0.6"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.1"
+  }
+}

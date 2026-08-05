@@ -2,12 +2,12 @@
   "name": "sqlite-viewer-pro",
   "displayName": "SQLite Viewer Pro",
   "description": "Fast, modern SQLite Database Viewer & SQL Query Console for Visual Studio Code",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "mirmakhamat",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mirmaxamat/ext-sqlite-viewer.git"
+    "url": "https://github.com/mirmakhamat/ext-sqlite-viewer.git"
   },
   "icon": "media/icon.png",
   "galleryBanner": {

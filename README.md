@@ -2,7 +2,7 @@
 
 A fast, modern, feature-rich SQLite Database Viewer extension for Visual Studio Code built with Node.js, WebAssembly (`sql.js`), and modern VS Code Native Webview UI.
 
-![SQLite Viewer](https://raw.githubusercontent.com/mirmaxamat/ext-sqlite-viewer/main/media/preview.png)
+![SQLite Viewer](https://raw.githubusercontent.com/mirmakhamat/ext-sqlite-viewer/main/media/preview.png)
 
 ## ✨ Key Features
 

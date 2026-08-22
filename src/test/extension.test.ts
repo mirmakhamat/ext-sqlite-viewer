@@ -3,8 +3,9 @@ import * as vscode from 'vscode';
 
 suite('Extension Lifecycle & Command Suite', () => {
     test('Command Palette Registration', async () => {
-        const ext = vscode.extensions.getExtension('sqlite-viewer.sqlite-viewer') || 
-                    vscode.extensions.getExtension('undefined_publisher.sqlite-viewer');
+        const ext = vscode.extensions.getExtension('mirmakhamat.sqlite-viewer-pro') ||
+                    vscode.extensions.getExtension('sqlite-viewer.sqlite-viewer') || 
+                    vscode.extensions.getExtension('undefined_publisher.sqlite-viewer-pro');
         if (ext && !ext.isActive) {
             await ext.activate();
         }

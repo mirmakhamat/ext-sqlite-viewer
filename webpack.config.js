@@ -19,10 +19,7 @@ const extensionConfig = {
     libraryTarget: 'commonjs2'
   },
   externals: {
-    vscode: 'commonjs vscode',
-    'sql.js': 'commonjs sql.js',
-    'sql.js/dist/sql-asm.js': 'commonjs sql.js/dist/sql-asm.js',
-    'sql.js/dist/sql-wasm.js': 'commonjs sql.js/dist/sql-wasm.js'
+    vscode: 'commonjs vscode'
   },
   resolve: {
     extensions: ['.ts', '.js']
@@ -37,6 +34,14 @@ const extensionConfig = {
             loader: 'ts-loader'
           }
         ]
+      },
+      {
+        test: /sql-wasm\.js$/,
+        use: [
+          {
+            loader: path.resolve(__dirname, 'webpack-sql-wasm-loader.js')
+          }
+        ]
       }
     ]
   },
@@ -44,5 +49,19 @@ const extensionConfig = {
   infrastructureLogging: {
     level: "log",
   },
+  plugins: [
+    {
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap('CopyWasmPlugin', () => {
+          const fs = require('fs');
+          const wasmSrc = path.resolve(__dirname, 'node_modules/sql.js/dist/sql-wasm.wasm');
+          const wasmDest = path.resolve(__dirname, 'dist/sql-wasm.wasm');
+          if (fs.existsSync(wasmSrc)) {
+            fs.copyFileSync(wasmSrc, wasmDest);
+          }
+        });
+      }
+    }
+  ]
 };
 module.exports = [ extensionConfig ];

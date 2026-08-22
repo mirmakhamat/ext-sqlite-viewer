@@ -5,6 +5,18 @@ All notable changes to the "SQLite Viewer" extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-08-22
+
+### Fixed
+- **Resolved WebAssembly Module Loading Issue**: Fixed `Cannot set properties of undefined (setting 'exports')` runtime error in Webpack CommonJS bundle by adding `webpack-sql-wasm-loader` to normalize Emscripten exports.
+- **Standalone WebAssembly SQLite Engine**: Directly bundled `sql-wasm.wasm` into the distribution package with instant in-memory binary instantiation, eliminating external runtime dependency on `node_modules`.
+
+### Changed & Improved
+- **Unified Header & Toolbar Layout**: Merged the top `.app-header` container directly into the table toolbar, maximizing vertical screen real estate and displaying clean database file names (`demo.db`) instead of long paths.
+- **Tabbed SQL Console Drawer**: Divided the SQL terminal into dedicated **Query** and **Results** tabs with automatic switching to Results upon `Run Query` / `Ctrl+Enter`.
+- **Optimized Marketplace Icon**: Replaced icon with transparent 256x256 RGBA asset.
+- **UI & Layout Polish**: Refined sidebar tree row height, native font integration, and resizable layout handles.
+
 ## [0.0.1] - 2026-08-05
 
 ### Added

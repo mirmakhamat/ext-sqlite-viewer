@@ -1,7 +1,14 @@
 import { Database, SqlJsStatic } from 'sql.js';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
 
 let SQL: SqlJsStatic | null = null;
+let extensionContext: vscode.ExtensionContext | null = null;
+
+export function setExtensionContext(context: vscode.ExtensionContext) {
+  extensionContext = context;
+}
 
 export interface TableColumnInfo {
   cid: number;
@@ -42,18 +49,27 @@ export interface CustomQueryResult {
 
 export async function getSqlEngine(): Promise<SqlJsStatic> {
   if (!SQL) {
-    try {
-      const initSqlJs = require('sql.js/dist/sql-asm.js');
-      if (typeof initSqlJs === 'function') {
-        SQL = await initSqlJs();
-      } else if (initSqlJs && typeof initSqlJs.default === 'function') {
-        SQL = await initSqlJs.default();
-      }
-    } catch (e) {
-      console.warn('Failed sql-asm.js, trying main sql.js package:', e);
-      const mainInit = require('sql.js');
-      SQL = await (typeof mainInit === 'function' ? mainInit() : mainInit.default());
+    const initSqlJs = require('sql.js/dist/sql-wasm.js');
+    let wasmPath = '';
+    if (extensionContext) {
+      wasmPath = vscode.Uri.joinPath(extensionContext.extensionUri, 'dist', 'sql-wasm.wasm').fsPath;
     }
+    if (!wasmPath || !fs.existsSync(wasmPath)) {
+      wasmPath = path.join(__dirname, 'sql-wasm.wasm');
+    }
+    if (!fs.existsSync(wasmPath)) {
+      wasmPath = path.resolve(__dirname, '../node_modules/sql.js/dist/sql-wasm.wasm');
+    }
+
+    let wasmBinary: Buffer | undefined;
+    if (fs.existsSync(wasmPath)) {
+      wasmBinary = fs.readFileSync(wasmPath);
+    }
+
+    SQL = await initSqlJs({
+      locateFile: () => wasmPath,
+      wasmBinary: wasmBinary
+    });
   }
   return SQL!;
 }

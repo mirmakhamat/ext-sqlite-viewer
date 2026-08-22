@@ -9,10 +9,12 @@ import {
     getTableData, 
     executeCustomQuery, 
     exportTableData,
-    getSqlEngine
+    getSqlEngine,
+    setExtensionContext
 } from "./sqliteService";
 import { Database } from "sql.js";
 export function activate(context: vscode.ExtensionContext) {
+    setExtensionContext(context);
     const customEditorProvider: vscode.CustomReadonlyEditorProvider = {
         openCustomDocument(uri: vscode.Uri) {
             return { uri, dispose: () => {} };
@@ -263,6 +265,7 @@ async function loadDatabaseFile(filePath: string, panel: vscode.WebviewPanel): P
         vscode.window.showInformationMessage(`SQLite Viewer: Opened ${dbFileName} (${tables.length} tables)`);
         return db;
     } catch (err: any) {
+        console.error('DEBUG STACK:', err && err.stack ? err.stack : err);
         vscode.window.showErrorMessage(`Failed to open SQLite database: ${err.message || String(err)}`);
         panel.webview.postMessage({ type: 'openCancelled' });
         return null;

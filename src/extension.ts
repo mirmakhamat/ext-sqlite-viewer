@@ -8,11 +8,10 @@ import {
     getTableDDL, 
     getTableData, 
     executeCustomQuery, 
-    exportTableData,
-    getSqlEngine,
-    setExtensionContext
+    exportTableToFile,
+    setExtensionContext,
+    Database
 } from "./sqliteService";
-import { Database } from "sql.js";
 export function activate(context: vscode.ExtensionContext) {
     setExtensionContext(context);
     const customEditorProvider: vscode.CustomReadonlyEditorProvider = {
@@ -86,19 +85,17 @@ async function setupWebview(extensionUri: vscode.Uri, panel: vscode.WebviewPanel
                 case 'refreshDatabase':
                     if (activeDbFilePath && panel) {
                         try {
-                            const engine = await getSqlEngine();
-                            const fileBuffer = fs.readFileSync(activeDbFilePath);
-                            
                             if (activeDb) {
                                 try { activeDb.close(); } catch (e) {}
+                                activeDb = null;
                             }
-                            activeDb = new engine.Database(fileBuffer);
+                            activeDb = await openDatabase(activeDbFilePath);
 
                             const tables = getTables(activeDb);
                             const dbInfo = {
                                 name: path.basename(activeDbFilePath),
                                 path: activeDbFilePath,
-                                status: 'Connected',
+                                status: activeDb.engine === 'sql.js' ? 'Connected (sql.js, no FTS5)' : 'Connected',
                                 size: `${(fs.statSync(activeDbFilePath).size / (1024 * 1024)).toFixed(2)} MB`
                             };
 
@@ -115,33 +112,41 @@ async function setupWebview(extensionUri: vscode.Uri, panel: vscode.WebviewPanel
 
                 case 'selectTable':
                     if (activeDb) {
-                        const tableData = getTableData(activeDb, message.tableName, { page: 1, pageSize: 100 });
-                        const schema = getTableSchema(activeDb, message.tableName);
-                        const ddl = getTableDDL(activeDb, message.tableName);
-                        panel.webview.postMessage({
-                            type: 'tableDataLoaded',
-                            tableName: message.tableName,
-                            data: tableData,
-                            schema,
-                            ddl
-                        });
+                        try {
+                            const tableData = getTableData(activeDb, message.tableName, { page: 1, pageSize: 100 });
+                            const schema = getTableSchema(activeDb, message.tableName);
+                            const ddl = getTableDDL(activeDb, message.tableName);
+                            panel.webview.postMessage({
+                                type: 'tableDataLoaded',
+                                tableName: message.tableName,
+                                data: tableData,
+                                schema,
+                                ddl
+                            });
+                        } catch (err: any) {
+                            vscode.window.showErrorMessage(`Cannot read table "${message.tableName}": ${err.message || String(err)}`);
+                        }
                     }
                     break;
 
                 case 'fetchData':
                     if (activeDb && message.tableName) {
-                        const tableData = getTableData(activeDb, message.tableName, {
-                            searchQuery: message.searchQuery,
-                            columnFilters: message.columnFilters,
-                            sortState: message.sortState,
-                            page: message.page,
-                            pageSize: message.pageSize
-                        });
-                        panel.webview.postMessage({
-                            type: 'tableDataLoaded',
-                            tableName: message.tableName,
-                            data: tableData
-                        });
+                        try {
+                            const tableData = getTableData(activeDb, message.tableName, {
+                                searchQuery: message.searchQuery,
+                                columnFilters: message.columnFilters,
+                                sortState: message.sortState,
+                                page: message.page,
+                                pageSize: message.pageSize
+                            });
+                            panel.webview.postMessage({
+                                type: 'tableDataLoaded',
+                                tableName: message.tableName,
+                                data: tableData
+                            });
+                        } catch (err: any) {
+                            vscode.window.showErrorMessage(`Cannot read table "${message.tableName}": ${err.message || String(err)}`);
+                        }
                     }
                     break;
 
@@ -160,7 +165,6 @@ async function setupWebview(extensionUri: vscode.Uri, panel: vscode.WebviewPanel
                 case 'exportData':
                     if (activeDb && message.table) {
                         const format = message.format || 'csv';
-                        const content = exportTableData(activeDb, message.table, format);
                         
                         let defaultUri: vscode.Uri | undefined = undefined;
                         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -187,8 +191,16 @@ async function setupWebview(extensionUri: vscode.Uri, panel: vscode.WebviewPanel
                         });
 
                         if (saveUri) {
-                            fs.writeFileSync(saveUri.fsPath, content, 'utf8');
-                            vscode.window.showInformationMessage(`Successfully exported table "${message.table}" to ${path.basename(saveUri.fsPath)}`);
+                            const db = activeDb;
+                            try {
+                                await vscode.window.withProgress(
+                                    { location: vscode.ProgressLocation.Notification, title: `Exporting "${message.table}"…` },
+                                    () => exportTableToFile(db, message.table, format, saveUri.fsPath)
+                                );
+                                vscode.window.showInformationMessage(`Successfully exported table "${message.table}" to ${path.basename(saveUri.fsPath)}`);
+                            } catch (err: any) {
+                                vscode.window.showErrorMessage(`Export failed: ${err.message || String(err)}`);
+                            }
                         }
                     }
                     break;
@@ -237,7 +249,7 @@ async function loadDatabaseFile(filePath: string, panel: vscode.WebviewPanel): P
         const dbInfo = {
             name: dbFileName,
             path: filePath,
-            status: 'Connected',
+            status: db.engine === 'sql.js' ? 'Connected (sql.js, no FTS5)' : 'Connected',
             size: `${(fs.statSync(filePath).size / (1024 * 1024)).toFixed(2)} MB`
         };
 
@@ -249,17 +261,22 @@ async function loadDatabaseFile(filePath: string, panel: vscode.WebviewPanel): P
 
         if (tables.length > 0) {
             const firstTable = tables[0].name;
-            const data = getTableData(db, firstTable, { page: 1, pageSize: 100 });
-            const schema = getTableSchema(db, firstTable);
-            const ddl = getTableDDL(db, firstTable);
+            try {
+                const data = getTableData(db, firstTable, { page: 1, pageSize: 100 });
+                const schema = getTableSchema(db, firstTable);
+                const ddl = getTableDDL(db, firstTable);
 
-            panel.webview.postMessage({
-                type: 'tableDataLoaded',
-                tableName: firstTable,
-                data,
-                schema,
-                ddl
-            });
+                panel.webview.postMessage({
+                    type: 'tableDataLoaded',
+                    tableName: firstTable,
+                    data,
+                    schema,
+                    ddl
+                });
+            } catch (err: any) {
+                // e.g. virtual table whose module (fts5) the engine lacks: keep the DB open.
+                vscode.window.showWarningMessage(`SQLite Viewer: cannot read table "${firstTable}": ${err.message || String(err)}`);
+            }
         }
 
         vscode.window.showInformationMessage(`SQLite Viewer: Opened ${dbFileName} (${tables.length} tables)`);

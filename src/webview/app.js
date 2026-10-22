@@ -579,7 +579,7 @@
 
     metricsEl.innerHTML = `
       <span class="sql-metric-badge">✓ Query Executed</span>
-      <span>${rowCount.toLocaleString()} row(s)</span>
+      <span>${rowCount.toLocaleString()}${result.truncated ? '+ (first rows only)' : ''} row(s)</span>
       <span>•</span>
       <span>Time: ${timeMs}ms</span>
     `;
@@ -929,8 +929,11 @@
           msg.tables.forEach(t => {
             state.tablesMap[t.name] = {
               name: t.name,
-              rowCountDisplay: `${t.rowCount.toLocaleString()} rows`,
+              rowCountDisplay: `${t.rowCount.toLocaleString()}${t.rowCountCapped ? '+' : ''} rows`,
               totalRows: t.rowCount,
+              kind: t.kind,
+              shadowOf: t.shadowOf,
+              readOnly: !!t.readOnly,
               badgeCount: t.badgeCount,
               columns: [],
               rows: [],
@@ -962,7 +965,8 @@
           tableConfig.columns = msg.data.columns;
           tableConfig.rows = msg.data.rows;
           tableConfig.totalRows = msg.data.totalRows;
-          tableConfig.rowCountDisplay = `${msg.data.totalRows.toLocaleString()} rows`;
+          tableConfig.totalCapped = !!msg.data.totalCapped;
+          tableConfig.rowCountDisplay = `${msg.data.totalRows.toLocaleString()}${tableConfig.totalCapped ? '+' : ''} rows`;
           
           if (msg.schema) {
             tableConfig.schema = msg.schema;

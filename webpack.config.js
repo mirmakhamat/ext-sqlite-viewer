@@ -19,7 +19,8 @@ const extensionConfig = {
     libraryTarget: 'commonjs2'
   },
   externals: {
-    vscode: 'commonjs vscode'
+    vscode: 'commonjs vscode',
+    'node:sqlite': 'commonjs node:sqlite'
   },
   resolve: {
     extensions: ['.ts', '.js']

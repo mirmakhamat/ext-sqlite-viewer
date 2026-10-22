@@ -2,7 +2,7 @@
   "name": "sqlite-viewer-pro",
   "displayName": "SQLite Viewer Pro",
   "description": "Fast, modern SQLite Database Viewer & SQL Query Console for Visual Studio Code",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "publisher": "mirmakhamat",
   "license": "MIT",
   "repository": {
@@ -25,7 +25,9 @@
     "query",
     "export",
     "csv",
-    "json"
+    "json",
+    "fts5",
+    "large database"
   ],
   "engines": {
     "vscode": "^1.125.0"

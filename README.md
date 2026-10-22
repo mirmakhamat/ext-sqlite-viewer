@@ -6,7 +6,8 @@ A fast, modern, feature-rich SQLite Database Viewer extension for Visual Studio 
 
 ## ✨ Key Features
 
-- **⚡ Fast SQLite Engine**: High-performance in-memory SQLite querying using `sql.js` (asm.js/Wasm).
+- **⚡ Fast SQLite Engine**: Opens databases read-only with VS Code's built-in `node:sqlite`, reading pages from disk, so multi-gigabyte files (over 2 GiB) open without loading them into memory. Falls back to `sql.js` (asm.js/Wasm, files under 2 GiB, no FTS5) when `node:sqlite` is unavailable.
+- **🧩 Views & Virtual Tables**: Views and virtual tables (FTS5, FTS3/4, R-Tree) are shown read-only; their internal shadow tables (`docs_data`, `docs_idx`, ...) sit in a collapsed "Internal tables" group.
 - **📂 Automatic File Associations**: Opens `.db`, `.sqlite`, `.sqlite3`, and `.db3` files directly on click or double-click in VS Code Explorer.
 - **🔍 Multi-Column Live Search**: Search across all columns instantly with in-input spinner feedback.
 - **⚡ Independent Column-Level Filtering**: Filter individual table columns with real-time text matching.
@@ -26,9 +27,17 @@ A fast, modern, feature-rich SQLite Database Viewer extension for Visual Studio 
   - Row Details modal with un-truncated code block viewing.
   - XSS protection via automatic HTML escaping so `<script>` or HTML tags render as plain text.
 - **📤 Multi-Format Export**:
-  - Export active table data as **CSV (.csv)**, **JSON (.json)**, or **SQL Dump (.sql)**.
+  - Export active table data as **CSV (.csv)**, **JSON (.json)**, or **SQL Dump (.sql)**, streamed to disk so large tables export with low memory use.
   - Automatically defaults save location to active VS Code workspace folder.
 - **🎨 Native VS Code Theme & Font Size Integration**: Automatically inherits current VS Code theme colors, font sizes, and UI variables.
+
+---
+
+## 📦 Requirements
+
+- Visual Studio Code `1.125.0` or newer. Nothing else is required: no Node.js, SQLite or other runtime needs to be installed.
+- Large files (over 2 GiB) and FTS5 tables need a VS Code build that includes `node:sqlite`. Without it the extension falls back to the bundled `sql.js` (files under 2 GiB, no FTS5).
+- Databases open **read-only**; the viewer never modifies your file.
 
 ---
 
@@ -47,7 +56,8 @@ We are actively developing new capabilities to make SQLite Viewer the ultimate d
 - [ ] **Inline Cell Editing**: Double-click any cell to edit its value directly and auto-save via `UPDATE` query.
 - [ ] **Row Management UI (Add & Delete Row)**: Dedicated UI buttons in toolbar and context menu to insert new rows or delete selected rows without writing SQL.
 - [ ] **Foreign Key Navigation**: Detect Foreign Keys (`PRAGMA foreign_key_list`) and convert FK cells into clickable links that jump to referenced rows in target tables.
-- [ ] **Large Database (>500MB) Streaming Fallback**: Add native SQLite CLI / IPC streaming interface for ultra-large multi-gigabyte database files.
+- [x] **Large Database (>2 GiB) Support**: Done via the native `node:sqlite` engine (read-only, bounded counts and result sizes).
+- [ ] **Writable Open Mode for Editing**: Editing must keep views, virtual tables, shadow tables and generated columns read-only, and account for `WITHOUT ROWID`, triggers and foreign keys.
 - [ ] **SQL Query Auto-Completion**: Monaco / SQL syntax auto-completion inside the SQL Console editor.
 
 ---

@@ -18,3 +18,4 @@ vsc-extension-quickstart.md
 *.sqlite
 *.sqlite3
 *.db3
+pnpm-lock.yaml
